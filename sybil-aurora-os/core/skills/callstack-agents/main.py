@@ -13,9 +13,9 @@ SKILL_NAME = "callstack-agents"
 
 
 def invoke(params: dict[str, Any]) -> dict[str, Any]:
-    agents = params["agents"]
+    agents = params.get("agents", [])
     execution_mode = params.get("execution_mode", "dag")
-    task = params["task"]
+    task = params.get("task", "")
 
     start = time.monotonic()
     trace: list[dict] = []

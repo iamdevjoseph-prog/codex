@@ -12,6 +12,7 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).parents[2]))
 
+from core.skill_loader import run as _skill_run
 from core.skills.quality_control.main import invoke as quality_control
 
 AGENT_NAME = "marketing-agent"
@@ -23,16 +24,13 @@ def run(params: dict[str, Any]) -> dict[str, Any]:
     platforms = params.get("platforms", ["meta", "google"])
     objectives = params.get("objectives", ["leads"])
 
-    # SEO: listing optimization
     seo_output = _run_seo(listing)
 
-    # Ads: paid creatives per platform
-    ad_outputs = {}
+    ad_outputs: dict[str, Any] = {}
     per_platform_budget = budget / len(platforms) if platforms else 0
     for platform in platforms:
         ad_outputs[platform] = _run_ads(listing, per_platform_budget, platform, objectives[0])
 
-    # Sales: outreach copy
     outreach = _run_sales(listing)
 
     output = {
@@ -59,42 +57,46 @@ def run(params: dict[str, Any]) -> dict[str, Any]:
 def _run_seo(listing: dict) -> dict:
     address = listing.get("address", "")
     property_type = listing.get("type", "property")
-    keywords = [f"{property_type} for sale", address, f"invest in {property_type}"]
-    return {
-        "optimized_title": f"{listing.get('bedrooms', '')}BR {property_type} | {address}",
-        "meta_description": f"Premium {property_type} at {address}. {listing.get('highlights', '')}",
-        "target_keywords": keywords,
-        "score": 0.82,
-        "recommendations": ["Add neighborhood keywords", "Include cap rate in title for investor searches"],
-        "skill": "seo-engine",
-    }
+    cap_rate = listing.get("cap_rate", "")
+    keywords = [
+        f"{property_type} for sale",
+        address,
+        f"invest in {property_type}",
+        *([] if not cap_rate else [f"{property_type} {cap_rate}% cap rate"]),
+    ]
+    result = _skill_run("seo-engine", {
+        "task": "listing_optimization",
+        "topic": f"{property_type} at {address}",
+        "keywords": keywords,
+        "url": listing.get("url", ""),
+        "market": listing.get("market", address),
+    })
+    return result.get("data", result)
 
 
 def _run_ads(listing: dict, budget: float, platform: str, objective: str) -> dict:
-    return {
+    address = listing.get("address", "")
+    property_type = listing.get("type", "property")
+    product = f"{property_type} at {address}" if address else property_type
+    result = _skill_run("ads-engine", {
+        "task": "creative_generation",
+        "product": product,
         "platform": platform,
         "objective": objective,
         "budget": budget,
-        "headline": f"Invest in {listing.get('type', 'Property')} — {listing.get('cap_rate', '')}% Cap Rate",
-        "body": f"Located at {listing.get('address', '')}. Strong cash flow, institutional quality.",
-        "cta": "Request Full Underwriting",
-        "targeting": {"interests": ["real estate investing", "commercial real estate"], "income": "100k+"},
-        "estimated_roas": 3.2,
-        "skill": "ads-engine",
-    }
+    })
+    return result.get("data", result)
 
 
 def _run_sales(listing: dict) -> dict:
-    return {
-        "subject_line": f"Deal: {listing.get('address', 'Off-market opportunity')}",
-        "copy": (
-            f"Hi [Name],\n\n"
-            f"We have an off-market {listing.get('type', 'property')} at {listing.get('address', '')} "
-            f"with a {listing.get('cap_rate', '')}% cap rate and strong fundamentals.\n\n"
-            f"I'd like to walk you through the numbers. Are you available this week?\n\n"
-            f"Best,"
-        ),
-        "call_to_action": "Reply to schedule a call",
+    address = listing.get("address", "off-market opportunity")
+    property_type = listing.get("type", "property")
+    cap_rate = listing.get("cap_rate", "")
+    offer = f"{property_type} at {address}" + (f" ({cap_rate}% cap rate)" if cap_rate else "")
+    result = _skill_run("sales-agent", {
+        "task": "cold_outreach",
+        "offer": offer,
         "channel": "email",
-        "skill": "sales-agent",
-    }
+        "tone": "consultative",
+    })
+    return result.get("data", result)

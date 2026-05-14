@@ -16,8 +16,8 @@ _THEMES = {
 
 
 def invoke(params: dict[str, Any]) -> dict[str, Any]:
-    chart_type = params["chart_type"]
-    data = params["data"]
+    chart_type = params.get("chart_type", "bar")
+    data = params.get("data", {})
     title = params.get("title", "")
     fmt = params.get("format", "json")
     theme = _THEMES.get(params.get("theme", "dark"), _THEMES["dark"])

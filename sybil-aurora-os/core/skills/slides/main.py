@@ -23,8 +23,8 @@ _INVESTOR_DECK_TEMPLATE = [
 
 
 def invoke(params: dict[str, Any]) -> dict[str, Any]:
-    deck_type = params["deck_type"]
-    content = params["content"]
+    deck_type = params.get("deck_type", "investor_deck")
+    content = params.get("content", {})
     brand = params.get("brand", {})
     fmt = params.get("format", "json")
 

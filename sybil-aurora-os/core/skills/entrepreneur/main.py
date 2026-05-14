@@ -12,7 +12,7 @@ _HANDLERS = {}
 
 
 def invoke(params: dict[str, Any]) -> dict[str, Any]:
-    task = params["task"]
+    task = params.get("task", "deal_analysis")
     data = params.get("data", {})
     constraints = params.get("constraints", {})
 

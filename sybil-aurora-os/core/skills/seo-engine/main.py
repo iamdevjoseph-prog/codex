@@ -28,7 +28,11 @@ def run(input: dict[str, Any]) -> dict[str, Any]:
 
 def _listing_optimization(topic: str, keywords: list, url: str) -> dict:
     primary = keywords[0] if keywords else topic
+    kw_str = ", ".join(keywords) if keywords else topic
     return {
+        "article": f"SEO article about {topic} targeting {kw_str}",
+        "title": f"{topic} Guide",
+        "keywords": keywords or [topic],
         "optimized_title": f"{primary} | {topic}" if topic else primary,
         "meta_description": f"Discover {topic} with insights on {', '.join(keywords[:3])}. Expert analysis and actionable data.",
         "target_keywords": keywords or [topic],

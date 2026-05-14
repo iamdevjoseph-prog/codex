@@ -16,7 +16,7 @@ _STORE_DIR = Path(os.environ.get("CONTEXT_STORE_DIR", "/tmp/sybil-context"))
 
 
 def invoke(params: dict[str, Any]) -> dict[str, Any]:
-    operation = params["operation"]
+    operation = params.get("operation", "store")
     session_id = params.get("session_id", "default")
 
     dispatch = {
