@@ -1,0 +1,26 @@
+{
+  "name": "image",
+  "version": "1.0.0",
+  "layer": "sybil",
+  "category": "media",
+  "description": "Image generation prompts, editing specs, and asset pipeline configuration.",
+  "input_schema": {
+    "type": "object",
+    "required": ["task"],
+    "properties": {
+      "task": { "type": "string", "enum": ["generate_prompt", "edit_spec", "batch_pipeline", "asset_variants"] },
+      "description": { "type": "string" },
+      "style": { "type": "string" },
+      "dimensions": { "type": "object", "properties": { "width": { "type": "integer" }, "height": { "type": "integer" } } },
+      "count": { "type": "integer", "default": 1 }
+    }
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "prompts": { "type": "array", "items": { "type": "string" } },
+      "pipeline_spec": { "type": "object" },
+      "skill": { "type": "string" }
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "name": "visualization",
+  "version": "1.0.0",
+  "layer": "sybil",
+  "category": "data",
+  "description": "Financial charts, dashboards, and D3-based data visualizations.",
+  "input_schema": {
+    "type": "object",
+    "required": ["chart_type", "data"],
+    "properties": {
+      "chart_type": { "type": "string", "enum": ["bar", "line", "pie", "scatter", "waterfall", "heatmap", "candlestick"] },
+      "data": { "type": "object" },
+      "title": { "type": "string" },
+      "format": { "type": "string", "enum": ["d3", "vega", "json"], "default": "json" },
+      "theme": { "type": "string", "enum": ["dark", "light", "minimal"], "default": "dark" }
+    }
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "spec": { "type": "object", "description": "Chart specification (D3/Vega-Lite compatible)" },
+      "chart_type": { "type": "string" },
+      "title": { "type": "string" },
+      "skill": { "type": "string" }
+    }
+  }
+}

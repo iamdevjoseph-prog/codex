@@ -1,0 +1,28 @@
+{
+  "name": "ads-engine",
+  "version": "1.0.0",
+  "layer": "sybil",
+  "category": "marketing",
+  "description": "Paid acquisition strategy, ad creatives, targeting parameters, ROAS optimization.",
+  "input_schema": {
+    "type": "object",
+    "required": ["task", "product"],
+    "properties": {
+      "task": { "type": "string", "enum": ["creative_generation", "audience_targeting", "budget_allocation", "copy_variants", "campaign_structure"] },
+      "product": { "type": "object" },
+      "budget": { "type": "number" },
+      "platform": { "type": "string", "enum": ["meta", "google", "linkedin", "tiktok"] },
+      "objective": { "type": "string", "enum": ["awareness", "leads", "conversions", "retargeting"] }
+    }
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "creatives": { "type": "array" },
+      "targeting": { "type": "object" },
+      "budget_split": { "type": "object" },
+      "estimated_roas": { "type": "number" },
+      "skill": { "type": "string" }
+    }
+  }
+}

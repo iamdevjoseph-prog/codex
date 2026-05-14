@@ -1,0 +1,26 @@
+{
+  "name": "caveman-agent",
+  "version": "1.0.0",
+  "layer": "sybil",
+  "category": "foundation",
+  "description": "Base agent runtime — minimal loop for prompt-in/action-out without framework overhead.",
+  "input_schema": {
+    "type": "object",
+    "required": ["prompt"],
+    "properties": {
+      "prompt": { "type": "string" },
+      "tools": { "type": "array", "items": { "type": "string" } },
+      "max_iterations": { "type": "integer", "default": 10 },
+      "model": { "type": "string", "default": "claude-haiku-4-5-20251001" }
+    }
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "result": { "type": "string" },
+      "iterations": { "type": "integer" },
+      "tool_calls": { "type": "array" },
+      "skill": { "type": "string" }
+    }
+  }
+}

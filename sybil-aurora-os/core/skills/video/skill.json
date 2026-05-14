@@ -1,0 +1,27 @@
+{
+  "name": "video",
+  "version": "1.0.0",
+  "layer": "sybil",
+  "category": "media",
+  "description": "Programmatic video creation — scripts, scene graphs, and rendering specs.",
+  "input_schema": {
+    "type": "object",
+    "required": ["task"],
+    "properties": {
+      "task": { "type": "string", "enum": ["script", "scene_graph", "render_spec", "storyboard"] },
+      "content": { "type": "object" },
+      "duration_seconds": { "type": "integer" },
+      "aspect_ratio": { "type": "string", "enum": ["16:9", "9:16", "1:1"], "default": "16:9" },
+      "style": { "type": "string", "enum": ["explainer", "promo", "documentary", "ad"] }
+    }
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "script": { "type": "string" },
+      "scenes": { "type": "array" },
+      "render_spec": { "type": "object" },
+      "skill": { "type": "string" }
+    }
+  }
+}

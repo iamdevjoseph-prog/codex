@@ -1,0 +1,31 @@
+{
+  "name": "quality-control",
+  "version": "1.0.0",
+  "layer": "sybil",
+  "category": "quality",
+  "description": "Stop Slop — enforces output quality, actionability, and production-grade standards on all outputs.",
+  "input_schema": {
+    "type": "object",
+    "required": ["output", "criteria"],
+    "properties": {
+      "output": { "type": "object", "description": "The output to evaluate" },
+      "criteria": {
+        "type": "array",
+        "items": { "type": "string", "enum": ["actionable", "structured", "concise", "accurate", "complete", "production_ready"] }
+      },
+      "domain": { "type": "string", "description": "Context domain for domain-specific quality rules" },
+      "min_score": { "type": "number", "default": 0.85 }
+    }
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "approved": { "type": "boolean" },
+      "quality_score": { "type": "number", "minimum": 0, "maximum": 1 },
+      "issues": { "type": "array", "items": { "type": "string" } },
+      "recommendations": { "type": "array", "items": { "type": "string" } },
+      "output": { "type": "object", "description": "Approved (possibly revised) output" },
+      "skill": { "type": "string" }
+    }
+  }
+}
