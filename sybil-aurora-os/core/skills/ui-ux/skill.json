@@ -1,0 +1,26 @@
+{
+  "name": "ui-ux",
+  "version": "1.0.0",
+  "layer": "sybil",
+  "category": "product",
+  "description": "Interface design, user flows, component specs, and interaction patterns.",
+  "input_schema": {
+    "type": "object",
+    "required": ["task"],
+    "properties": {
+      "task": { "type": "string", "enum": ["wireframe", "flow", "component_spec", "design_system", "accessibility_audit"] },
+      "context": { "type": "object" },
+      "platform": { "type": "string", "enum": ["web", "ios", "android", "desktop"], "default": "web" },
+      "style": { "type": "string", "enum": ["minimal", "material", "cupertino", "custom"], "default": "minimal" }
+    }
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "spec": { "type": "object" },
+      "components": { "type": "array" },
+      "flow": { "type": "array" },
+      "skill": { "type": "string" }
+    }
+  }
+}

@@ -1,0 +1,248 @@
+openapi: "3.1.0"
+info:
+  title: Sybil–Aurora OS API
+  version: "2.0.0"
+  description: |
+    REST API surface for the Sybil orchestration layer.
+    All endpoints enforce trailofbits-security and quality-control gates.
+
+servers:
+  - url: https://api.sybil-aurora.internal/v2
+    description: Internal production
+
+security:
+  - bearerAuth: []
+
+paths:
+  /orchestrate:
+    post:
+      summary: Submit a task to the Sybil orchestrator
+      operationId: orchestrate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrchestrateRequest"
+      responses:
+        "200":
+          description: Orchestration result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrchestrateResponse"
+        "422":
+          description: Security or quality gate failure
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GateFailure"
+
+  /skills/{skill_name}/invoke:
+    post:
+      summary: Invoke a skill directly
+      operationId: invokeSkill
+      parameters:
+        - name: skill_name
+          in: path
+          required: true
+          schema:
+            type: string
+            enum:
+              - anthropic-core
+              - trailofbits-security
+              - callstack-agents
+              - context-engine
+              - caveman-agent
+              - entrepreneur
+              - sales-agent
+              - seo-engine
+              - ads-engine
+              - ui-ux
+              - slides
+              - visualization
+              - video
+              - image
+              - ios-testing
+              - quality-control
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: Skill output (structured JSON)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SkillOutput"
+
+  /context/{session_id}:
+    get:
+      summary: Retrieve session context summary
+      operationId: getContext
+      parameters:
+        - name: session_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Context summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContextSummary"
+
+  /workflows/real-estate-intelligence:
+    post:
+      summary: Run full real estate intelligence pipeline
+      operationId: realEstateIntelligence
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RealEstateRequest"
+      responses:
+        "200":
+          description: Full pipeline output
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkflowResult"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+
+  schemas:
+    OrchestrateRequest:
+      type: object
+      required: [intent, payload]
+      properties:
+        intent:
+          type: string
+        payload:
+          type: object
+        session_id:
+          type: string
+
+    OrchestrateResponse:
+      type: object
+      properties:
+        orchestrator:
+          type: string
+        session_id:
+          type: string
+        intent:
+          type: string
+        agents_invoked:
+          type: array
+          items:
+            type: string
+        output:
+          type: object
+        quality_score:
+          type: number
+        approved:
+          type: boolean
+        elapsed_ms:
+          type: integer
+
+    SkillOutput:
+      type: object
+      properties:
+        skill:
+          type: string
+        result:
+          type: object
+
+    ContextSummary:
+      type: object
+      properties:
+        session_id:
+          type: string
+        total_records:
+          type: integer
+        keys:
+          type: array
+          items:
+            type: string
+
+    RealEstateRequest:
+      type: object
+      required: [deal, fund_config]
+      properties:
+        deal:
+          type: object
+          required: [address, purchase_price, noi]
+          properties:
+            id:
+              type: string
+            address:
+              type: string
+            type:
+              type: string
+            purchase_price:
+              type: number
+            noi:
+              type: number
+            loan_amount:
+              type: number
+            cap_rate:
+              type: string
+            hold_period:
+              type: string
+        fund_config:
+          type: object
+          properties:
+            name:
+              type: string
+            period:
+              type: string
+            marketing_budget:
+              type: number
+            platforms:
+              type: array
+              items:
+                type: string
+            brand:
+              type: object
+
+    WorkflowResult:
+      type: object
+      properties:
+        workflow:
+          type: string
+        status:
+          type: string
+          enum: [complete, halted]
+        session_id:
+          type: string
+        deal:
+          type: string
+        phases:
+          type: object
+        quality_scores:
+          type: object
+
+    GateFailure:
+      type: object
+      properties:
+        error:
+          type: string
+        gate:
+          type: string
+          enum: [security, quality]
+        violations:
+          type: array
+          items:
+            type: object
+        risk_score:
+          type: number

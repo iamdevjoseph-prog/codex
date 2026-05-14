@@ -1,0 +1,87 @@
+version: "3.9"
+
+# Sybil–Aurora OS — Local development stack
+# All secrets pulled from environment — never hardcoded.
+
+x-sybil-env: &sybil-env
+  ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+  CONTEXT_STORE_DIR: /data/context
+  ENVIRONMENT: ${ENVIRONMENT:-development}
+  LOG_LEVEL: ${LOG_LEVEL:-info}
+
+services:
+  # ── Sybil Orchestrator API ─────────────────────────────────────────────────
+  orchestrator:
+    build:
+      context: ../..
+      dockerfile: aurora/deployment/Dockerfile
+    command: uvicorn aurora.services.app:app --host 0.0.0.0 --port 8000 --reload
+    ports:
+      - "8000:8000"
+    environment:
+      <<: *sybil-env
+    volumes:
+      - context-store:/data/context
+      - ../../:/app
+    depends_on:
+      - redis
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # ── Redis — session state + job queue ─────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # ── Worker — async skill execution ────────────────────────────────────────
+  worker:
+    build:
+      context: ../..
+      dockerfile: aurora/deployment/Dockerfile
+    command: python -m aurora.services.worker
+    environment:
+      <<: *sybil-env
+      REDIS_URL: redis://redis:6379
+    volumes:
+      - context-store:/data/context
+      - ../../:/app
+    depends_on:
+      - redis
+
+  # ── Prometheus — metrics ───────────────────────────────────────────────────
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    profiles:
+      - observability
+
+  # ── Grafana — dashboards ──────────────────────────────────────────────────
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-changeme}
+    depends_on:
+      - prometheus
+    profiles:
+      - observability
+
+volumes:
+  context-store:
+  redis-data:

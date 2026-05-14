@@ -1,0 +1,28 @@
+{
+  "name": "seo-engine",
+  "version": "1.0.0",
+  "layer": "sybil",
+  "category": "marketing",
+  "description": "Organic growth, keyword strategy, listing optimization, ranking systems.",
+  "input_schema": {
+    "type": "object",
+    "required": ["task"],
+    "properties": {
+      "task": { "type": "string", "enum": ["keyword_research", "listing_optimization", "content_brief", "competitor_analysis", "meta_generation"] },
+      "content": { "type": "string" },
+      "target_keywords": { "type": "array", "items": { "type": "string" } },
+      "url": { "type": "string" },
+      "market": { "type": "string" }
+    }
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "result": { "type": "object" },
+      "keywords": { "type": "array" },
+      "score": { "type": "number" },
+      "recommendations": { "type": "array" },
+      "skill": { "type": "string" }
+    }
+  }
+}

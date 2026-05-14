@@ -3513,6 +3513,7 @@ version = "0.0.0"
 dependencies = [
  "codex-utils-absolute-path",
  "include_dir",
+ "serde_json 1.0.149",
  "thiserror 2.0.18",
 ]
 

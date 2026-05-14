@@ -1,0 +1,28 @@
+{
+  "name": "context-engine",
+  "version": "1.0.0",
+  "layer": "sybil",
+  "category": "foundation",
+  "description": "Structured memory, retrieval, and context persistence across tasks and agent sessions.",
+  "input_schema": {
+    "type": "object",
+    "required": ["operation"],
+    "properties": {
+      "operation": { "type": "string", "enum": ["store", "retrieve", "search", "summarize", "clear"] },
+      "key": { "type": "string" },
+      "value": { "type": "object" },
+      "query": { "type": "string", "description": "Used for semantic search retrieval" },
+      "session_id": { "type": "string" },
+      "top_k": { "type": "integer", "default": 5 }
+    }
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "success": { "type": "boolean" },
+      "data": { "type": "object" },
+      "matches": { "type": "array" },
+      "skill": { "type": "string" }
+    }
+  }
+}

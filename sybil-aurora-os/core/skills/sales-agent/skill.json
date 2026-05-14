@@ -1,0 +1,28 @@
+{
+  "name": "sales-agent",
+  "version": "1.0.0",
+  "layer": "sybil",
+  "category": "business",
+  "description": "Conversion scripts, sales sequences, persuasion frameworks, and objection handling.",
+  "input_schema": {
+    "type": "object",
+    "required": ["task", "product"],
+    "properties": {
+      "task": { "type": "string", "enum": ["cold_outreach", "follow_up", "objection_handling", "close_script", "email_sequence"] },
+      "product": { "type": "object" },
+      "prospect": { "type": "object" },
+      "tone": { "type": "string", "enum": ["professional", "consultative", "direct", "friendly"], "default": "consultative" },
+      "channel": { "type": "string", "enum": ["email", "linkedin", "phone", "sms"], "default": "email" }
+    }
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "copy": { "type": "string" },
+      "subject_line": { "type": "string" },
+      "call_to_action": { "type": "string" },
+      "variants": { "type": "array" },
+      "skill": { "type": "string" }
+    }
+  }
+}

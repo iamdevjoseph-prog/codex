@@ -1,0 +1,30 @@
+{
+  "name": "trailofbits-security",
+  "version": "1.0.0",
+  "layer": "sybil",
+  "category": "foundation",
+  "description": "Output validation, hallucination detection, secure execution patterns, and integrity checks.",
+  "input_schema": {
+    "type": "object",
+    "required": ["payload", "checks"],
+    "properties": {
+      "payload": { "type": "object", "description": "The output to validate" },
+      "checks": {
+        "type": "array",
+        "items": { "type": "string", "enum": ["hallucination", "schema", "injection", "pii", "data_integrity"] }
+      },
+      "schema_ref": { "type": "object", "description": "Expected output schema for validation" },
+      "strict": { "type": "boolean", "default": true }
+    }
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "passed": { "type": "boolean" },
+      "violations": { "type": "array", "items": { "type": "object" } },
+      "sanitized_payload": { "type": "object" },
+      "risk_score": { "type": "number", "minimum": 0, "maximum": 1 },
+      "skill": { "type": "string" }
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "name": "ios-testing",
+  "version": "1.0.0",
+  "layer": "aurora",
+  "category": "testing",
+  "description": "iOS simulator-based testing, XCTest generation, and UI validation.",
+  "input_schema": {
+    "type": "object",
+    "required": ["task"],
+    "properties": {
+      "task": { "type": "string", "enum": ["generate_tests", "run_simulation", "ui_validation", "performance_profile"] },
+      "target": { "type": "string", "description": "Xcode target name" },
+      "device": { "type": "string", "default": "iPhone 16" },
+      "os_version": { "type": "string", "default": "18.0" },
+      "test_cases": { "type": "array", "items": { "type": "object" } }
+    }
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "test_code": { "type": "string" },
+      "results": { "type": "object" },
+      "coverage": { "type": "number" },
+      "skill": { "type": "string" }
+    }
+  }
+}

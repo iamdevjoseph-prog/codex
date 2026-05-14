@@ -1,0 +1,36 @@
+{
+  "name": "callstack-agents",
+  "version": "1.0.0",
+  "layer": "sybil",
+  "category": "foundation",
+  "description": "Multi-agent orchestration: spawn, coordinate, and collect results from parallel or sequential agent sub-tasks.",
+  "input_schema": {
+    "type": "object",
+    "required": ["agents", "task"],
+    "properties": {
+      "task": { "type": "string", "description": "The top-level task to decompose" },
+      "agents": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": ["name", "input"],
+          "properties": {
+            "name": { "type": "string" },
+            "input": { "type": "object" },
+            "depends_on": { "type": "array", "items": { "type": "string" } }
+          }
+        }
+      },
+      "execution_mode": { "type": "string", "enum": ["parallel", "sequential", "dag"], "default": "dag" }
+    }
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "results": { "type": "object", "description": "Keyed by agent name" },
+      "execution_trace": { "type": "array" },
+      "elapsed_ms": { "type": "integer" },
+      "skill": { "type": "string" }
+    }
+  }
+}

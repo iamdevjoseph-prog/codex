@@ -1,0 +1,26 @@
+{
+  "name": "entrepreneur",
+  "version": "1.0.0",
+  "layer": "sybil",
+  "category": "business",
+  "description": "Business logic, monetization models, deal structuring, capital allocation analysis.",
+  "input_schema": {
+    "type": "object",
+    "required": ["task"],
+    "properties": {
+      "task": { "type": "string", "enum": ["deal_analysis", "monetization", "cap_table", "valuation", "unit_economics", "market_sizing"] },
+      "data": { "type": "object" },
+      "constraints": { "type": "object" }
+    }
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "analysis": { "type": "object" },
+      "recommendation": { "type": "string" },
+      "metrics": { "type": "object" },
+      "risks": { "type": "array" },
+      "skill": { "type": "string" }
+    }
+  }
+}

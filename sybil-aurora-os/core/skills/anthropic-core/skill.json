@@ -1,0 +1,27 @@
+{
+  "name": "anthropic-core",
+  "version": "1.0.0",
+  "layer": "sybil",
+  "category": "foundation",
+  "description": "Prompt chaining, reasoning patterns, and Claude API orchestration primitives.",
+  "input_schema": {
+    "type": "object",
+    "required": ["prompt", "mode"],
+    "properties": {
+      "prompt": { "type": "string" },
+      "mode": { "type": "string", "enum": ["chain", "reason", "summarize", "extract"] },
+      "context": { "type": "array", "items": { "type": "object" } },
+      "model": { "type": "string", "default": "claude-opus-4-7" },
+      "max_tokens": { "type": "integer", "default": 4096 }
+    }
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "result": { "type": "string" },
+      "reasoning_trace": { "type": "array" },
+      "tokens_used": { "type": "integer" },
+      "skill": { "type": "string" }
+    }
+  }
+}

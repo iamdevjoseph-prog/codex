@@ -1,0 +1,26 @@
+{
+  "name": "slides",
+  "version": "1.0.0",
+  "layer": "sybil",
+  "category": "product",
+  "description": "Investor decks, presentations, and structured slide generation.",
+  "input_schema": {
+    "type": "object",
+    "required": ["deck_type", "content"],
+    "properties": {
+      "deck_type": { "type": "string", "enum": ["investor_deck", "pitch_deck", "report", "executive_summary"] },
+      "content": { "type": "object" },
+      "brand": { "type": "object", "properties": { "primary_color": { "type": "string" }, "logo_url": { "type": "string" } } },
+      "format": { "type": "string", "enum": ["json", "markdown", "html"], "default": "json" }
+    }
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "slides": { "type": "array" },
+      "deck_type": { "type": "string" },
+      "slide_count": { "type": "integer" },
+      "skill": { "type": "string" }
+    }
+  }
+}
