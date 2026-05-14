@@ -10,6 +10,10 @@ use codex_config::NetworkConstraints;
 use codex_config::NetworkDomainPermissionToml;
 use codex_config::NetworkUnixSocketPermissionToml;
 use codex_config::RequirementSource;
+use codex_config::RequirementsExecPolicyDecisionToml;
+use codex_config::RequirementsExecPolicyPatternTokenToml;
+use codex_config::RequirementsExecPolicyPrefixRuleToml;
+use codex_config::RequirementsExecPolicyToml;
 use codex_config::ResidencyRequirement;
 use codex_config::SandboxModeRequirement;
 use codex_config::WebSearchModeRequirement;
@@ -192,11 +196,10 @@ fn render_debug_config_lines(stack: &ConfigLayerStack) -> Vec<Line<'static>> {
         ));
     }
 
-    // TODO(gt): Expand this debug output with detailed skills and rules display.
-    if requirements_toml.rules.is_some() {
+    if let Some(rules) = requirements_toml.rules.as_ref() {
         requirement_lines.push(requirement_line(
             "rules",
-            "configured".to_string(),
+            format_exec_policy_rules(rules),
             requirements.exec_policy_source(),
         ));
     }
@@ -267,6 +270,36 @@ fn render_session_flag_details(config: &TomlValue) -> Vec<Line<'static>> {
         .into_iter()
         .map(|(key, value)| format!("     - {key} = {value}").into())
         .collect()
+}
+
+fn format_exec_policy_rules(rules: &RequirementsExecPolicyToml) -> String {
+    let count = rules.prefix_rules.len();
+    let summaries: Vec<String> = rules.prefix_rules.iter().map(format_prefix_rule).collect();
+    format!("{count} prefix_rule(s) ({})", summaries.join("; "))
+}
+
+fn format_prefix_rule(rule: &RequirementsExecPolicyPrefixRuleToml) -> String {
+    let pattern: Vec<String> = rule.pattern.iter().map(format_pattern_token).collect();
+    let pattern_str = pattern.join(" ");
+    let decision = rule
+        .decision
+        .map(|d| match d {
+            RequirementsExecPolicyDecisionToml::Allow => "allow",
+            RequirementsExecPolicyDecisionToml::Prompt => "prompt",
+            RequirementsExecPolicyDecisionToml::Forbidden => "forbidden",
+        })
+        .unwrap_or("?");
+    format!("{pattern_str}: {decision}")
+}
+
+fn format_pattern_token(token: &RequirementsExecPolicyPatternTokenToml) -> String {
+    if let Some(single) = &token.token {
+        single.clone()
+    } else if let Some(alts) = &token.any_of {
+        format!("{{{}}}", alts.join("|"))
+    } else {
+        "?".to_string()
+    }
 }
 
 fn format_managed_hooks_requirements(hooks: &ManagedHooksRequirementsToml) -> String {
@@ -956,6 +989,57 @@ approval_policy = "never"
         assert!(rendered.contains("hooks:"));
         assert!(rendered.contains("handlers=1"));
         assert!(rendered.contains("(source: cloud requirements)"));
+    }
+
+    #[test]
+    fn debug_config_output_lists_rules_with_detail() {
+        use codex_config::RequirementsExecPolicyDecisionToml;
+        use codex_config::RequirementsExecPolicyPatternTokenToml;
+        use codex_config::RequirementsExecPolicyPrefixRuleToml;
+        use codex_config::RequirementsExecPolicyToml;
+
+        let requirements_toml = ConfigRequirementsToml {
+            rules: Some(RequirementsExecPolicyToml {
+                prefix_rules: vec![
+                    RequirementsExecPolicyPrefixRuleToml {
+                        pattern: vec![
+                            RequirementsExecPolicyPatternTokenToml {
+                                token: Some("rm".to_string()),
+                                any_of: None,
+                            },
+                            RequirementsExecPolicyPatternTokenToml {
+                                token: None,
+                                any_of: Some(vec!["-r".to_string(), "-rf".to_string()]),
+                            },
+                        ],
+                        decision: Some(RequirementsExecPolicyDecisionToml::Forbidden),
+                        justification: Some("no recursive deletes".to_string()),
+                    },
+                    RequirementsExecPolicyPrefixRuleToml {
+                        pattern: vec![RequirementsExecPolicyPatternTokenToml {
+                            token: Some("curl".to_string()),
+                            any_of: None,
+                        }],
+                        decision: Some(RequirementsExecPolicyDecisionToml::Prompt),
+                        justification: None,
+                    },
+                ],
+            }),
+            ..ConfigRequirementsToml::default()
+        };
+
+        let stack =
+            ConfigLayerStack::new(Vec::new(), ConfigRequirements::default(), requirements_toml)
+                .expect("config layer stack");
+
+        let rendered = render_to_text(&render_debug_config_lines(&stack));
+        assert!(rendered.contains("  - rules:"), "should show rules line");
+        assert!(rendered.contains("2 prefix_rule(s)"), "should show count");
+        assert!(
+            rendered.contains("rm {-r|-rf}: forbidden"),
+            "should show first rule"
+        );
+        assert!(rendered.contains("curl: prompt"), "should show second rule");
     }
 
     #[test]
