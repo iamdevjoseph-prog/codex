@@ -2,25 +2,158 @@
 
 ## Project Identity
 
-This repository contains **OpenAI Codex CLI** — a local coding agent that runs in your terminal, desktop app, or IDE. It exposes a reasoning-capable AI assistant that can read, edit, and execute code on your behalf.
+This repository contains **OpenAI Codex CLI** — a local coding agent that runs in your terminal, desktop app, or IDE. It is the execution substrate of the **Sybil–Aurora OS**: an AI-native operating system for capital allocation, real estate intelligence, agent-based automation, and full-stack product development.
 
 ---
 
-## Sybil–Aurora OS Design Philosophy
+## Sybil–Aurora OS (v2)
 
-When building or modifying any subsystem inside this repository, treat the codebase as a two-layer architecture:
+### System Overview
 
-- **Sybil (Intelligence Layer):** reasoning, agent logic, decision systems, prompt engineering, model coordination
-- **Aurora (Infrastructure Layer):** cloud execution, process management, sandboxing, IaC, deployment pipelines
+This is a dual-layer AI operating system:
 
-Rules:
-1. Maintain strict separation between intelligence (thinking/logic) and execution (infrastructure/deployment).
+| Layer | Name | Responsibility |
+|---|---|---|
+| Intelligence | **Sybil** | Reasoning, orchestration, decision-making, agent coordination |
+| Infrastructure | **Aurora** | Execution, cloud systems, process management, deployment |
+
+Claude acts as: **Orchestrator · Systems Architect · Multi-agent Coordinator · Skill Router**
+
+### Execution Pipeline
+
+Every task flows through this pipeline — no exceptions:
+
+```
+User Intent
+  → Orchestration Layer (Claude / Sybil)
+    → Agent Selection
+      → Skill Invocation
+        → Tool Execution (Aurora)
+          → Quality Control (Stop Slop)
+            → Final Output
+```
+
+### Core Design Rules
+
+1. Maintain strict separation between Sybil (thinking) and Aurora (execution). Never mix them.
 2. All systems must be modular, composable, and independently deployable.
 3. Assume production-grade requirements — no prototype-style architecture in core paths.
 4. Secrets must never be hardcoded; always externalize via config or environment.
 5. Design for: **scalability · auditability · observability · security**.
 6. Explain architectural decisions briefly before implementing large changes.
 7. Prefer system-level improvements over isolated point fixes.
+8. **Do not just generate outputs — orchestrate systems of capability.**
+
+---
+
+## Skill Framework (CRITICAL)
+
+All capabilities are implemented as modular **skills** located in `/core/skills/`.
+
+### Skill Contract
+
+Every skill must:
+- Have a single, clearly defined purpose
+- Accept structured inputs
+- Return structured outputs (JSON preferred)
+- Be callable by any agent in the system
+- Be composable into multi-skill workflows
+
+### Skill Invocation Rules
+
+- Prefer **reusing** existing skills over creating new ones
+- **Chain** multiple skills for complex tasks
+- Always validate outputs through:
+  - `trailofbits-security` — correctness and secure execution
+  - `quality-control` (Stop Slop) — output quality gate
+
+### Agent Behavior Rules
+
+When solving any task:
+1. Identify intent
+2. Select appropriate agent(s)
+3. Select appropriate skill(s)
+4. Chain skills if needed
+5. Validate output through quality-control
+
+Agents must be modular, use skills (not hardcoded logic), and be composable into workflows.
+
+### Skill Catalog
+
+#### I. Foundation Layer
+
+| Skill | Purpose |
+|---|---|
+| `anthropic-core` | Prompt chaining, reasoning patterns |
+| `trailofbits-security` | Validation, secure execution |
+| `callstack-agents` | Multi-agent orchestration |
+| `context-engine` | Memory, retrieval, context persistence |
+| `caveman-agent` | Base agent runtime |
+
+#### II. Business + Sales
+
+| Skill | Purpose |
+|---|---|
+| `entrepreneur` | Business logic, monetization |
+| `sales-agent` | Conversion, scripts, persuasion |
+
+#### III. Marketing + Growth
+
+| Skill | Purpose |
+|---|---|
+| `seo-engine` | Organic growth, ranking systems |
+| `ads-engine` | Paid acquisition, creatives |
+
+#### IV. Product + UI
+
+| Skill | Purpose |
+|---|---|
+| `ui-ux` | Interface design, flows |
+| `slides` | Presentations, decks |
+
+#### V. Data + Visualization
+
+| Skill | Purpose |
+|---|---|
+| `visualization` | Dashboards, D3-based outputs |
+
+#### VI. Media Generation
+
+| Skill | Purpose |
+|---|---|
+| `video` | Programmatic video creation |
+| `image` | Image generation and editing |
+
+#### VII. Testing
+
+| Skill | Purpose |
+|---|---|
+| `ios-testing` | Simulation and validation |
+
+#### VIII. Quality Control
+
+| Skill | Purpose |
+|---|---|
+| `quality-control` | Stop Slop — enforce output quality on all outputs |
+
+---
+
+## Context & Memory
+
+- Maintain structured context across tasks using `context-engine`.
+- Store relevant outputs for reuse — retrieve before recomputing.
+- All context state must be structured and auditable.
+
+---
+
+## Output Standards
+
+All outputs must be:
+- Structured (JSON or typed schema where applicable)
+- Actionable and production-grade
+- Validated for correctness (no hallucinated data in critical systems)
+- Concise — avoid unnecessary verbosity
+- Secure — follow `trailofbits-security` execution patterns
 
 ---
 
@@ -397,17 +530,27 @@ Report vulnerabilities to **security@openai.com**. Do not open public issues for
 
 ## Quick Reference: Where Does New Code Belong?
 
-| Change type | Target crate / layer |
+### Sybil (Intelligence) Layer
+
+| Change type | Target |
 |---|---|
-| New reasoning / agent logic | New crate or `codex-core` (avoid core if possible) |
+| New reasoning / agent logic | New crate (avoid `codex-core`); or `/core/skills/` as a skill |
+| New skill capability | `/core/skills/<skill-name>/` following the skill contract |
+| Skill orchestration / chaining | `codex-skills`, `codex-core-skills`, or `callstack-agents` skill |
+| Context / memory management | `context-engine` skill or `codex-thread-store` |
+| Hook system | `codex-hooks` |
+| Model metadata | `codex-model-provider-info` |
+
+### Aurora (Infrastructure) Layer
+
+| Change type | Target |
+|---|---|
 | TUI feature | `codex-tui` |
-| New CLI flag | `codex-cli` (Rust) |
+| New CLI flag | `codex-cli` (Rust crate) |
 | App-server API (v2) | `codex-app-server` + `codex-app-server-protocol` |
 | Execution / process management | `codex-exec-server` or `codex-execpolicy` |
-| Model metadata | `codex-model-provider-info` |
-| Hook system | `codex-hooks` |
-| Skill / slash command | `codex-skills` or `codex-core-skills` |
 | Config schema | `codex-config` (then run `just write-config-schema`) |
 | MCP tool management | `codex-mcp` |
-| Cloud/infrastructure | `cloud-tasks`, `cloud-requirements` |
+| Cloud / infrastructure | `cloud-tasks`, `cloud-requirements` |
 | Auth / identity | `codex-agent-identity`, `codex-login` |
+| JS wrapper / npm package | `codex-cli/` (JavaScript) |
