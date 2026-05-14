@@ -146,8 +146,9 @@ class AppServerClient:
         self._approval_handler = approval_handler or self._default_approval_handler
         self._proc: subprocess.Popen[str] | None = None
         self._lock = threading.Lock()
+        self._read_lock = threading.Lock()
         self._turn_consumer_lock = threading.Lock()
-        self._active_turn_consumer: str | None = None
+        self._turn_queues: dict[str, deque[Notification]] = {}
         self._pending_notifications: deque[Notification] = deque()
         self._stderr_lines: deque[str] = deque(maxlen=400)
         self._stderr_thread: threading.Thread | None = None
@@ -195,7 +196,8 @@ class AppServerClient:
             return
         proc = self._proc
         self._proc = None
-        self._active_turn_consumer = None
+        with self._turn_consumer_lock:
+            self._turn_queues.clear()
 
         if proc.stdin:
             proc.stdin.close()
@@ -287,20 +289,72 @@ class AppServerClient:
             if "method" in msg and "id" not in msg:
                 return self._coerce_notification(msg["method"], msg.get("params"))
 
+    def next_notification_for_turn(self, turn_id: str) -> Notification:
+        while True:
+            with self._turn_consumer_lock:
+                queue = self._turn_queues.get(turn_id)
+                if queue:
+                    return queue.popleft()
+
+            routed = False
+            while self._pending_notifications:
+                notification = self._pending_notifications.popleft()
+                notif_turn_id = self._extract_notification_turn_id(notification)
+                if notif_turn_id is None or notif_turn_id == turn_id:
+                    return notification
+                with self._turn_consumer_lock:
+                    target = self._turn_queues.get(notif_turn_id)
+                    if target is not None:
+                        target.append(notification)
+                        routed = True
+                        break
+                return notification
+            if routed:
+                continue
+
+            with self._read_lock:
+                with self._turn_consumer_lock:
+                    queue = self._turn_queues.get(turn_id)
+                    if queue:
+                        return queue.popleft()
+
+                while True:
+                    msg = self._read_message()
+                    if "method" in msg and "id" in msg:
+                        response = self._handle_server_request(msg)
+                        self._write_message({"id": msg["id"], "result": response})
+                        continue
+                    if "method" in msg and "id" not in msg:
+                        notification = self._coerce_notification(msg["method"], msg.get("params"))
+                        notif_turn_id = self._extract_notification_turn_id(notification)
+                        if notif_turn_id is None or notif_turn_id == turn_id:
+                            return notification
+                        with self._turn_consumer_lock:
+                            target = self._turn_queues.get(notif_turn_id)
+                            if target is not None:
+                                target.append(notification)
+                            else:
+                                self._pending_notifications.append(notification)
+
+    def _extract_notification_turn_id(self, notification: Notification) -> str | None:
+        payload = notification.payload
+        turn_id = getattr(payload, "turn_id", None)
+        if isinstance(turn_id, str):
+            return turn_id
+        turn = getattr(payload, "turn", None)
+        if turn is not None:
+            turn_id = getattr(turn, "id", None)
+            if isinstance(turn_id, str):
+                return turn_id
+        return None
+
     def acquire_turn_consumer(self, turn_id: str) -> None:
         with self._turn_consumer_lock:
-            if self._active_turn_consumer is not None:
-                raise RuntimeError(
-                    "Concurrent turn consumers are not yet supported in the experimental SDK. "
-                    f"Client is already streaming turn {self._active_turn_consumer!r}; "
-                    f"cannot start turn {turn_id!r} until the active consumer finishes."
-                )
-            self._active_turn_consumer = turn_id
+            self._turn_queues[turn_id] = deque()
 
     def release_turn_consumer(self, turn_id: str) -> None:
         with self._turn_consumer_lock:
-            if self._active_turn_consumer == turn_id:
-                self._active_turn_consumer = None
+            self._turn_queues.pop(turn_id, None)
 
     def thread_start(self, params: V2ThreadStartParams | JsonObject | None = None) -> ThreadStartResponse:
         return self.request("thread/start", _params_dict(params), response_model=ThreadStartResponse)

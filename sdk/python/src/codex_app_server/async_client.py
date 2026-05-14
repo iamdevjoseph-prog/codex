@@ -184,6 +184,9 @@ class AsyncAppServerClient:
     async def next_notification(self) -> Notification:
         return await self._call_sync(self._sync.next_notification)
 
+    async def next_notification_for_turn(self, turn_id: str) -> Notification:
+        return await self._call_sync(self._sync.next_notification_for_turn, turn_id)
+
     async def wait_for_turn_completed(self, turn_id: str) -> TurnCompletedNotification:
         return await self._call_sync(self._sync.wait_for_turn_completed, turn_id)
 

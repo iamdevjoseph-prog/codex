@@ -674,11 +674,10 @@ class TurnHandle:
         return self._client.turn_interrupt(self.thread_id, self.id)
 
     def stream(self) -> Iterator[Notification]:
-        # TODO: replace this client-wide experimental guard with per-turn event demux.
         self._client.acquire_turn_consumer(self.id)
         try:
             while True:
-                event = self._client.next_notification()
+                event = self._client.next_notification_for_turn(self.id)
                 yield event
                 if (
                     event.method == "turn/completed"
@@ -728,11 +727,10 @@ class AsyncTurnHandle:
 
     async def stream(self) -> AsyncIterator[Notification]:
         await self._codex._ensure_initialized()
-        # TODO: replace this client-wide experimental guard with per-turn event demux.
         self._codex._client.acquire_turn_consumer(self.id)
         try:
             while True:
-                event = await self._codex._client.next_notification()
+                event = await self._codex._client.next_notification_for_turn(self.id)
                 yield event
                 if (
                     event.method == "turn/completed"
