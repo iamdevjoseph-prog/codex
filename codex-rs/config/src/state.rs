@@ -23,9 +23,7 @@ pub struct LoaderOverrides {
     pub ignore_managed_requirements: bool,
     pub ignore_user_config: bool,
     pub ignore_user_and_project_exec_policy_rules: bool,
-    //TODO(gt): Add a macos_ prefix to this field and remove the target_os check.
-    #[cfg(target_os = "macos")]
-    pub managed_preferences_base64: Option<String>,
+    pub macos_managed_preferences_base64: Option<String>,
     pub macos_managed_config_requirements_base64: Option<String>,
 }
 
@@ -42,8 +40,7 @@ impl LoaderOverrides {
             ignore_managed_requirements: false,
             ignore_user_config: false,
             ignore_user_and_project_exec_policy_rules: false,
-            #[cfg(target_os = "macos")]
-            managed_preferences_base64: Some(String::new()),
+            macos_managed_preferences_base64: Some(String::new()),
             macos_managed_config_requirements_base64: Some(String::new()),
         }
     }

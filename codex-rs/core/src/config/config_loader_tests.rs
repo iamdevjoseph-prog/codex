@@ -454,7 +454,7 @@ flag = false
 "#;
 
     let mut overrides = LoaderOverrides::with_managed_config_path_for_tests(managed_path);
-    overrides.managed_preferences_base64 =
+    overrides.macos_managed_preferences_base64 =
         Some(base64::prelude::BASE64_STANDARD.encode(raw_managed_preferences.as_bytes()));
 
     let cwd = AbsolutePathBuf::try_from(tmp.path()).expect("cwd");
@@ -507,7 +507,7 @@ async fn managed_preferences_expand_home_directory_in_workspace_write_roots() ->
 
     let mut loader_overrides =
         LoaderOverrides::with_managed_config_path_for_tests(tmp.path().join("managed_config.toml"));
-    loader_overrides.managed_preferences_base64 = Some(
+    loader_overrides.macos_managed_preferences_base64 = Some(
         base64::prelude::BASE64_STANDARD.encode(
             r#"
 sandbox_mode = "workspace-write"
