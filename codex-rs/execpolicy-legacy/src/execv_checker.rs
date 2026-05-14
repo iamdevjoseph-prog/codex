@@ -131,8 +131,21 @@ fn is_executable_file(path: &str) -> bool {
 
         #[cfg(windows)]
         {
-            // TODO(mbolin): Check against PATHEXT environment variable.
-            return metadata.is_file();
+            // A file is executable on Windows if its extension appears in the
+            // PATHEXT environment variable (e.g. ".EXE;.CMD;.BAT;.COM").
+            if !metadata.is_file() {
+                return false;
+            }
+            let file_ext = Path::new(path)
+                .extension()
+                .and_then(|e| e.to_str())
+                .map(|e| format!(".{}", e.to_uppercase()))
+                .unwrap_or_default();
+            let pathext =
+                std::env::var("PATHEXT").unwrap_or_else(|_| ".COM;.EXE;.BAT;.CMD".to_string());
+            return pathext
+                .split(';')
+                .any(|ext| ext.eq_ignore_ascii_case(&file_ext));
         }
     }
 
@@ -169,7 +182,13 @@ system_path=[{fake_cp:?}]
         let temp_dir = TempDir::new()?;
 
         // Create an executable file that can be used with the system_path arg.
+        // On Windows the file needs a PATHEXT-listed extension (e.g. .exe) to be
+        // recognised as executable.
+        #[cfg(unix)]
         let fake_cp = temp_dir.path().join("cp");
+        #[cfg(windows)]
+        let fake_cp = temp_dir.path().join("cp.exe");
+
         #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;
