@@ -312,7 +312,7 @@ async fn write_value_succeeds_when_managed_preferences_expand_home_directory_pat
 
     let mut loader_overrides =
         LoaderOverrides::with_managed_config_path_for_tests(tmp.path().join("managed_config.toml"));
-    loader_overrides.managed_preferences_base64 = Some(
+    loader_overrides.macos_managed_preferences_base64 = Some(
         base64::prelude::BASE64_STANDARD.encode(
             r#"
 sandbox_mode = "workspace-write"
