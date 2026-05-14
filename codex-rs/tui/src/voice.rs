@@ -15,6 +15,11 @@ use tracing::error;
 const MODEL_AUDIO_SAMPLE_RATE: u32 = 24_000;
 const MODEL_AUDIO_CHANNELS: u16 = 1;
 
+/// Maximum playback queue depth in seconds. If the producer outpaces the output
+/// stream, samples older than this threshold are dropped from the front so that
+/// playback stays close to real-time rather than falling arbitrarily far behind.
+const MAX_PLAYBACK_BUFFER_SECS: u32 = 10;
+
 pub struct VoiceCapture {
     stream: Option<cpal::Stream>,
     stopped: Arc<AtomicBool>,
@@ -331,8 +336,13 @@ impl RealtimeAudioPlayer {
             .queue
             .lock()
             .map_err(|_| "failed to lock output audio queue".to_string())?;
-        // TODO(aibrahim): Cap or trim this queue if we observe producer bursts outrunning playback.
         guard.extend(converted);
+        let max_samples = (self.output_sample_rate * u32::from(self.output_channels))
+            .saturating_mul(MAX_PLAYBACK_BUFFER_SECS) as usize;
+        if guard.len() > max_samples {
+            let excess = guard.len() - max_samples;
+            drop(guard.drain(..excess));
+        }
         Ok(())
     }
 
