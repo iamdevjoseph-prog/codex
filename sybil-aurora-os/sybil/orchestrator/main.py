@@ -8,7 +8,7 @@ from __future__ import annotations
 import json
 import os
 import time
-from typing import Any
+from typing import Any, Generator
 
 from anthropic import Anthropic
 
@@ -97,6 +97,69 @@ class Orchestrator:
             "approved": qc["approved"],
             "message": "Intelligent routing active",
         }
+
+    def stream(
+        self,
+        user_input: str,
+        context: dict[str, Any] | None = None,
+        metadata: dict[str, Any] | None = None,
+        request_id: str | None = None,
+    ) -> Generator[dict[str, Any], None, None]:
+        """
+        Generator mirror of run(). Yields one dict per pipeline stage so
+        callers can forward incremental results to the client as SSE events.
+
+        Yield shapes:
+          {"event": "intent",   "data": {intent dict}}
+          {"event": "skill",    "data": {"skill": name, "status": str}}   (once per skill)
+          {"event": "security", "data": {"passed": bool}}
+          {"event": "quality",  "data": {"approved": bool, "quality_score": float}}
+          {"event": "done",     "data": {final output matching run() shape, + request_id}}
+        """
+        intent = self._parse_intent(user_input)
+        yield {"event": "intent", "data": intent}
+
+        results = []
+        for skill in intent.get("skills", []):
+            result = self._execute_skill(skill, {"input": user_input, **(context or {})})
+            results.append({"skill": skill, "output": result})
+            yield {"event": "skill", "data": {"skill": skill, "status": result.get("status", "ok")}}
+
+        output = {
+            "intent": intent,
+            "results": results,
+            "agent": intent.get("agent"),
+            "message": "Intelligent routing active",
+        }
+
+        sec = _skill_run("trailofbits-security", {
+            "payload": output,
+            "checks": ["hallucination", "pii", "data_integrity"],
+            "strict": False,
+        })
+        yield {"event": "security", "data": {"passed": sec["passed"]}}
+        if not sec["passed"]:
+            output["_security_warnings"] = sec["violations"]
+            output = sec["sanitized_payload"]
+
+        qc = _skill_run("quality-control", {
+            "output": output,
+            "criteria": ["structured", "complete"],
+            "min_score": 0.6,
+        })
+        yield {"event": "quality", "data": {"approved": qc["approved"], "quality_score": qc["quality_score"]}}
+
+        final = {
+            "intent": intent,
+            "results": results,
+            "agent": intent.get("agent"),
+            "quality_score": qc["quality_score"],
+            "approved": qc["approved"],
+            "message": "Intelligent routing active",
+        }
+        if request_id:
+            final["request_id"] = request_id
+        yield {"event": "done", "data": final}
 
     def debug(
         self,
