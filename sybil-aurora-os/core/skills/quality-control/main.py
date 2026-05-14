@@ -16,15 +16,6 @@ _SLOP_SIGNALS = [
     "in conclusion,", "to summarize,", "in summary,",
 ]
 
-_CRITERIA_CHECKS = {
-    "actionable": _check_actionable,
-    "structured": _check_structured,
-    "concise": _check_concise,
-    "accurate": _check_accurate,
-    "complete": _check_complete,
-    "production_ready": _check_production_ready,
-}
-
 
 def invoke(params: dict[str, Any]) -> dict[str, Any]:
     output = params["output"]
@@ -41,8 +32,17 @@ def invoke(params: dict[str, Any]) -> dict[str, Any]:
     if slop_issues:
         recommendations.append("Remove filler language and hedging phrases.")
 
+    _criteria_checks = {
+        "actionable": _check_actionable,
+        "structured": _check_structured,
+        "concise": _check_concise,
+        "accurate": _check_accurate,
+        "complete": _check_complete,
+        "production_ready": _check_production_ready,
+    }
+
     for criterion in criteria:
-        checker = _CRITERIA_CHECKS.get(criterion)
+        checker = _criteria_checks.get(criterion)
         if checker:
             criterion_issues, criterion_score = checker(output)
             issues += criterion_issues
@@ -55,6 +55,7 @@ def invoke(params: dict[str, Any]) -> dict[str, Any]:
     approved = quality_score >= min_score and not slop_issues
 
     return {
+        "status": "success",
         "approved": approved,
         "quality_score": quality_score,
         "issues": issues,
@@ -62,6 +63,9 @@ def invoke(params: dict[str, Any]) -> dict[str, Any]:
         "output": output,
         "skill": SKILL_NAME,
     }
+
+
+run = invoke
 
 
 def _check_slop(output: dict) -> list[str]:

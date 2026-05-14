@@ -34,7 +34,7 @@ def invoke(params: dict[str, Any]) -> dict[str, Any]:
     if fmt == "markdown":
         slides = _to_markdown(slides)
 
-    return {"slides": slides, "deck_type": deck_type, "slide_count": len(slides), "skill": SKILL_NAME}
+    return {"status": "success", "slides": slides, "deck_type": deck_type, "slide_count": len(slides), "skill": SKILL_NAME}
 
 
 def _investor_deck(content: dict, brand: dict) -> list[dict]:
@@ -75,3 +75,5 @@ _BUILDERS = {
     "report": _generic_deck,
     "executive_summary": _generic_deck,
 }
+
+run = invoke

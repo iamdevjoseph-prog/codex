@@ -24,6 +24,7 @@ def invoke(params: dict[str, Any]) -> dict[str, Any]:
 
 def _generic_analysis(data: dict, constraints: dict) -> dict:
     return {
+        "status": "success",
         "analysis": data,
         "recommendation": "Requires domain-specific data to generate recommendation.",
         "metrics": {},
@@ -44,6 +45,7 @@ def deal_analysis(data: dict, constraints: dict) -> dict:
         risks.append("LTV exceeds 75% — elevated leverage risk")
 
     return {
+        "status": "success",
         "analysis": {"cap_rate": round(cap_rate, 2), "ltv": round(ltv, 2), "noi": noi},
         "recommendation": "Proceed" if cap_rate >= 6 and ltv <= 70 else "Review underwriting",
         "metrics": {"irr_target": constraints.get("irr_target", "8%"), "hold_period": data.get("hold_period", "5yr")},
@@ -52,3 +54,5 @@ def deal_analysis(data: dict, constraints: dict) -> dict:
 
 
 _HANDLERS["deal_analysis"] = deal_analysis
+
+run = invoke

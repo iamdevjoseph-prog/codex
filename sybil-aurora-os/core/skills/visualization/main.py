@@ -28,11 +28,12 @@ def invoke(params: dict[str, Any]) -> dict[str, Any]:
     if fmt == "vega":
         spec = _wrap_vega_lite(spec, chart_type, data, title, theme)
 
-    return {"spec": spec, "chart_type": chart_type, "title": title, "skill": SKILL_NAME}
+    return {"status": "success", "spec": spec, "chart_type": chart_type, "title": title, "skill": SKILL_NAME}
 
 
 def _bar_spec(data: dict, title: str, theme: dict) -> dict:
     return {
+        "status": "success",
         "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
         "title": title,
         "mark": "bar",
@@ -48,6 +49,7 @@ def _bar_spec(data: dict, title: str, theme: dict) -> dict:
 
 def _line_spec(data: dict, title: str, theme: dict) -> dict:
     return {
+        "status": "success",
         "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
         "title": title,
         "mark": {"type": "line", "point": True},
@@ -95,3 +97,5 @@ _CHART_BUILDERS = {
     "heatmap": _default_spec,
     "candlestick": _default_spec,
 }
+
+run = invoke

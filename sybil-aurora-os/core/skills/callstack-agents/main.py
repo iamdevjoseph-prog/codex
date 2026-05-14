@@ -29,11 +29,15 @@ def invoke(params: dict[str, Any]) -> dict[str, Any]:
         results, trace = _run_dag(agents, results)
 
     return {
+        "status": "success",
         "results": results,
         "execution_trace": trace,
         "elapsed_ms": int((time.monotonic() - start) * 1000),
         "skill": SKILL_NAME,
     }
+
+
+run = invoke
 
 
 def _run_sequential(agents: list[dict], results: dict) -> tuple[dict, list]:

@@ -32,8 +32,12 @@ def invoke(params: dict[str, Any]) -> dict[str, Any]:
         return {"success": False, "error": f"Unknown operation: {operation}", "skill": SKILL_NAME}
 
     result = handler(params, session_id)
+    result["status"] = "success"
     result["skill"] = SKILL_NAME
     return result
+
+
+run = invoke
 
 
 def _session_path(session_id: str) -> Path:

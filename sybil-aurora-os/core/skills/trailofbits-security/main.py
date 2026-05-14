@@ -55,12 +55,16 @@ def invoke(params: dict[str, Any]) -> dict[str, Any]:
     passed = len(violations) == 0 if strict else risk_score < 0.5
 
     return {
+        "status": "success",
         "passed": passed,
         "violations": violations,
         "sanitized_payload": _sanitize(payload) if not passed else payload,
         "risk_score": round(risk_score, 2),
         "skill": SKILL_NAME,
     }
+
+
+run = invoke
 
 
 def _check_injection(text: str) -> list[dict]:
